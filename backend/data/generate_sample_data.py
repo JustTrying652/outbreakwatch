@@ -111,7 +111,7 @@ DAILY_CONSUMPTION_RATE = {
 RESUPPLY_EVERY_DAYS = 14
 
 INJECTED_STOCKOUTS = [
-    ("Kisumu Referral Hospital", "ORS Sachets", date(2023, 4, 15)),  # coincides with cholera outbreak above
+    ("Kisumu Referral Hospital", "ORS Sachets", date(2023, 4, 10), date(2023, 4, 27)),  # coincides with cholera outbreak above
 ]
 
 res_rows = []
