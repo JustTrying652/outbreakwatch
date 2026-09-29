@@ -140,9 +140,14 @@ for facility in FACILITIES:
         )
 
         if days_since_resupply >= RESUPPLY_EVERY_DAYS and not suppress:
-            stock["ORS Sachets"] = max(stock["ORS Sachets"], 0) + STARTING_STOCK["ORS Sachets"] * 0.6
-            stock["Antimalarials"] = max(stock["Antimalarials"], 0) + STARTING_STOCK["Antimalarials"] * 0.6
-            stock["Respiratory Support Kits"] = max(stock["Respiratory Support Kits"], 0) + STARTING_STOCK["Respiratory Support Kits"] * 0.6
+            # Resupply tops stock back up TOWARD capacity, it doesn't add on top of
+            # whatever's left. (The original version added a fixed amount every cycle
+            # regardless of current level, which meant stock grew unbounded over time
+            # instead of realistically depleting — caught while building stock-out
+            # prediction, since it made every series look permanently well-stocked.)
+            for res in ["ORS Sachets", "Antimalarials", "Respiratory Support Kits"]:
+                cap = STARTING_STOCK[res]
+                stock[res] = min(cap, max(stock[res], 0) + cap * 0.6)
             days_since_resupply = 0
 
         for res in RESOURCES:
