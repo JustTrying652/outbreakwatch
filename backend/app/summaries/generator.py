@@ -86,24 +86,45 @@ def summarize_resource(prediction: StockoutPrediction) -> str:
     """
     Builds a plain-language line from an already-computed StockoutPrediction.
     Does not recompute anything — only phrases what's already in the object.
+    Wording differs for consumables (stock-out / resupply) and capacity (shortfall / surge plans).
     """
+    is_capacity = prediction.kind == "capacity"
+    event = "capacity shortfall" if is_capacity else "stock-out"
+    driver = "demand" if is_capacity else "consumption"
+    action = "Recommend reviewing surge and transfer plans." if is_capacity else "Recommend scheduling resupply."
+    level_word = "current availability" if is_capacity else "current level"
+
     header = (
         f"{prediction.facility} — {prediction.resource}: "
-        f"current level {prediction.current_level:.0f} "
+        f"{level_word} {prediction.current_level:.0f} "
         f"(safety threshold {prediction.safety_threshold:.0f})."
     )
 
-    if prediction.days_until_stockout_mean is None:
-        return header + f" No stock-out projected within the {prediction.forecast_horizon_days}-day horizon."
+    mean = prediction.days_until_stockout_mean
+    worst = prediction.days_until_stockout_pessimistic
+    best = prediction.days_until_stockout_optimistic
 
-    bounds = [d for d in (prediction.days_until_stockout_optimistic, prediction.days_until_stockout_pessimistic) if d is not None]
-    range_str = f"{min(bounds)}-{max(bounds)}" if bounds else "unknown"
+    if mean is None and worst is None:
+        return header + f" No {event} projected within the {prediction.forecast_horizon_days}-day horizon."
 
-    return (
-        header + f" At current consumption trends, projected to reach the safety threshold in "
-        f"{prediction.days_until_stockout_mean} days "
-        f"(range: {range_str} days depending on how consumption trends). Recommend scheduling resupply."
-    )
+    if mean is None:
+        return (
+            header + f" No {event} is expected within the {prediction.forecast_horizon_days}-day horizon, "
+            f"but in the worst case the safety threshold is reached in {worst} days."
+        )
+
+    bounds = [d for d in (best, worst) if d is not None]
+    if len(bounds) == 2:
+        spread = f"(range: {min(bounds)}-{max(bounds)} days depending on how {driver} trends)"
+    elif len(bounds) == 1:
+        spread = f"(as early as {bounds[0]} days in the worst case; the best case shows none within the horizon)"
+    else:
+        spread = ""
+
+    text = header + f" At current {driver} trends, projected to reach the safety threshold in {mean} days"
+    if spread:
+        text += f" {spread}"
+    return text + f". {action}"
 
 
 def facility_situation_report(facility: str, condition_summaries: list[str], resource_summaries: list[str]) -> str:
