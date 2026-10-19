@@ -22,6 +22,8 @@ export default function ResourcePanel({ facility, resources, days }) {
   const so = stockout.data;
   const d = so?.days_until_stockout;
   const atRisk = d && d.expected !== null;
+  const isCapacity = so?.kind === "capacity";
+
 
   return (
     <div>
@@ -61,7 +63,7 @@ export default function ResourcePanel({ facility, resources, days }) {
             <XAxis dataKey="date" minTickGap={48} tick={{ fontSize: 12 }} />
             <YAxis tick={{ fontSize: 12 }} />
             <Tooltip />
-            <Line dataKey="level" name="Stock level" stroke="#059669" strokeWidth={2} dot={false} />
+            <Line dataKey="level" name={isCapacity ? "Available capacity" : "Stock level"} stroke="#059669" strokeWidth={2} dot={false} />
             {so && (
               <ReferenceLine
                 y={so.safety_threshold}
@@ -79,7 +81,11 @@ export default function ResourcePanel({ facility, resources, days }) {
       {stockout.error && <p className="error">{stockout.error.message}</p>}
       {so && (
         <div className={`card ${atRisk ? "risk" : "ok"}`}>
-          <strong>{atRisk ? "Stock-out risk" : "No stock-out projected"}</strong>
+          <strong>
+            {atRisk
+              ? isCapacity ? "Capacity risk" : "Stock-out risk"
+              : isCapacity ? "No capacity shortfall projected" : "No stock-out projected"}
+          </strong>
           <p>{so.summary}</p>
           {atRisk && (
             <p className="muted">
