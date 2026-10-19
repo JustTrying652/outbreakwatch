@@ -1,122 +1,82 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState } from "react";
+import { api } from "./api/client";
+import { useAsync } from "./api/useAsync";
+import CaseChart from "./components/CaseChart";
+import ResourcePanel from "./components/ResourcePanel";
+import SummaryCard from "./components/SummaryCard";
 
-function App() {
-  const [count, setCount] = useState(0)
+const WINDOWS = [
+  { label: "Last 90 days", value: 90 },
+  { label: "Last year", value: 365 },
+  { label: "All history", value: 1700 },
+];
+
+export default function App() {
+  const meta = useAsync(() => api.facilities(), []);
+  const [facility, setFacility] = useState(null);
+  const [condition, setCondition] = useState(null);
+  const [days, setDays] = useState(365);
+
+  if (meta.loading) return <p className="muted pad">Connecting to the API…</p>;
+  if (meta.error) {
+    return (
+      <p className="error pad">
+        Cannot reach the API at http://127.0.0.1:8000. Is uvicorn running? ({meta.error.message})
+      </p>
+    );
+  }
+
+  const { facilities, conditions, resources } = meta.data;
+  const f = facility ?? facilities[0];
+  const c = condition ?? conditions[0];
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
+    <div className="page">
+      <header>
+        <h1>OutbreakWatch</h1>
+        <div className="controls">
+          <label>
+            Facility{" "}
+            <select value={f} onChange={(e) => setFacility(e.target.value)}>
+              {facilities.map((x) => (
+                <option key={x}>{x}</option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Window{" "}
+            <select value={days} onChange={(e) => setDays(Number(e.target.value))}>
+              {WINDOWS.map((w) => (
+                <option key={w.value} value={w.value}>
+                  {w.label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
+      </header>
+
+      <section>
+        <h2>Disease surveillance</h2>
+        <div className="tabs">
+          {conditions.map((x) => (
+            <button key={x} className={x === c ? "tab active" : "tab"} onClick={() => setCondition(x)}>
+              {x}
+            </button>
+          ))}
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
+        <CaseChart facility={f} condition={c} days={days} />
       </section>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
+      <section>
+        <h2>Resource readiness</h2>
+        <ResourcePanel key={f} facility={f} resources={resources} days={days} />
       </section>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+      <section>
+        <h2>Situation report</h2>
+        <SummaryCard key={f} facility={f} />
+      </section>
+    </div>
+  );
 }
-
-export default App
