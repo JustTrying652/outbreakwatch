@@ -1,0 +1,7 @@
+pandas
+numpy
+statsmodels
+fastapi
+uvicorn
+pytest
+httpx
