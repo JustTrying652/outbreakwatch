@@ -14,7 +14,7 @@ An early-warning system for hospital disease outbreaks and resource shortfalls. 
 - **Predicts shortfalls** for medicines (days until stock-out, with best, expected and worst case) and for bed capacity.
 - **Explains itself** with plain-language situation reports. Every number in them is read from a computed value, never generated freehand.
 
-The project began as a concept note for a university hackathon and was built out afterwards as a personal project.
+The project began as a concept note for a university hackathon and was built out afterwards as a learning project.
 
 ## Quick start
 
