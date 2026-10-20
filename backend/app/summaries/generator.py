@@ -68,13 +68,13 @@ def summarize_condition(
     active_watches = [f for f in recent_flags if f.severity == "watch"]
 
     if active_alerts:
-        dates = ", ".join(str(f.date.date()) for f in sorted(set(f.date for f in active_alerts)))
+        dates = ", ".join(str(d.date()) for d in sorted({f.date for f in active_alerts}))
         lines.append(
             f"ALERT: case counts on {dates} were significantly higher than the model expected "
             f"for this time of year — recommend review."
         )
     elif active_watches:
-        dates = ", ".join(str(f.date.date()) for f in sorted(set(f.date for f in active_watches)))
+        dates = ", ".join(str(d.date()) for d in sorted({f.date for f in active_watches}))
         lines.append(f"Watch: elevated-but-not-critical deviation flagged on {dates}.")
     else:
         lines.append("No anomaly flags in the recent period.")

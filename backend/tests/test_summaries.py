@@ -65,3 +65,21 @@ def test_condition_summary_reports_alerts():
     text = summarize_condition("Facility", "Malaria", series, fc, [flag])
     assert "ALERT" in text
     assert "2026-08-30" in text
+
+def test_condition_summary_reports_watch_level_flags():
+    series, fc = _case_inputs()
+    flag = AnomalyFlag(pd.Timestamp("2026-08-29"), "cusum", 15, 10.0, 5.5, "watch")
+    text = summarize_condition("Facility", "Malaria", series, fc, [flag])
+    assert "Watch:" in text
+    assert "2026-08-29" in text
+    assert "ALERT" not in text
+
+
+def test_date_flagged_by_both_detectors_is_listed_once():
+    series, fc = _case_inputs()
+    flags = [
+        AnomalyFlag(pd.Timestamp("2026-08-30"), "residual_zscore", 20, 10.0, 5.0, "alert"),
+        AnomalyFlag(pd.Timestamp("2026-08-30"), "cusum", 20, 10.0, 9.0, "alert"),
+    ]
+    text = summarize_condition("Facility", "Malaria", series, fc, flags)
+    assert text.count("2026-08-30") == 1
