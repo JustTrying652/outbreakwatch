@@ -254,7 +254,7 @@ def get_stockout(
         "facility": p.facility,
         "resource": p.resource,
         "as_of": as_of,
-        "Kind": p.kind,
+        "kind": p.kind,
         "current_level": p.current_level,
         "safety_threshold": round(p.safety_threshold, 1),
         "horizon_days": p.forecast_horizon_days,
@@ -265,7 +265,6 @@ def get_stockout(
         },
         "summary": summarize_resource(p),
     }
-
 
 @app.get("/summary/{facility}")
 def get_summary(facility: str):
